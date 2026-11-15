@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zomato - Online Food Delivery</title>
+    
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #f8f8f8;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* --- MODERN REALISTIC ZOMATO INTERFACE --- */
+        #zomato-screen {
+            display: block;
+            min-height: 100vh;
+            background: #fff;
+            position: relative;
+            padding-bottom: 70px;
+        }
+
+        .z-top-header {
+            background: #fff;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .z-loc-box {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .z-location-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 700;
+            font-size: 16px;
+            color: #1c1c1c;
+        }
+
+        .z-location-row svg {
+            width: 18px;
+            height: 18px;
+            fill: #ef4f5f;
+        }
+
+        .z-subloc {
+            font-size: 12px;
+            color: #696969;
+            margin-left: 22px;
+            margin-top: 1px;
+        }
+
+        .z-profile-btn {
+            width: 38px;
+            height: 38px;
+            background: #f8f8f8;
+            border: 1px solid #e8e8e8;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .z-profile-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .z-search-container {
+            padding: 10px 16px;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .z-search-box {
+            display: flex;
+            align-items: center;
+            background: #f8f8f8;
+            border: 1px solid #dedede;
+            border-radius: 12px;
+            padding: 10px 14px;
+            gap: 10px;
+        }
+
+        .z-search-box svg {
+            width: 18px;
+            height: 18px;
+            fill: #9c9c9c;
+        }
+
+        .z-search-box input {
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 14px;
+            width: 100%;
+            color: #333;
+        }
+
+        .z-main-content {
+            padding: 16px;
+        }
+
+        .z-promo-banner {
+            width: 100%;
+            height: 140px;
+            background: linear-gradient(135deg, #ef4f5f, #d43b4d);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 20px;
+            color: white;
+            margin-bottom: 20px;
+            box-shadow: 0 6px 15px rgba(239, 79, 95, 0.25);
+        }
+
+        .z-promo-banner h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .z-promo-banner p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .z-section-header {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1c1c1c;
+            margin-bottom: 12px;
+        }
+
+        .z-card {
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            margin-bottom: 16px;
+            border: 1px solid #f1f1f1;
+        }
+
+        .z-card-img {
+            width: 100%;
+            height: 150px;
+            background: #eef2f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8c9bab;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .z-card-body {
+            padding: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .z-card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1c1c1c;
+            margin-bottom: 2px;
+        }
+
+        .z-card-sub {
+            font-size: 12px;
+            color: #696969;
+        }
+
+        .z-rating-badge {
+            background: #24963f;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        /* --- ULTRA MODERN GLASSMORPHIC PIN MODAL --- */
+        #password-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modern-pin-box {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px 24px;
+            border-radius: 24px;
+            width: 88%;
+            max-width: 340px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.4);
+        }
+
+        .pin-lock-icon {
+            width: 56px;
+            height: 56px;
+            background: #fff0f1;
+            color: #ef4f5f;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 24px;
+            box-shadow: 0 8px 16px rgba(239, 79, 95, 0.15);
+        }
+
+        .modern-pin-box h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1c1c1c;
+            margin-bottom: 6px;
+        }
+
+        .modern-pin-box p {
+            font-size: 13px;
+            color: #7d7d7d;
+            margin-bottom: 24px;
+        }
+
+        .pin-dots-container {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .pin-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid #dcdcdc;
+            background: #f4f4f4;
+            transition: all 0.2s ease;
+        }
+
+        .pin-dot.active {
+            background: #ef4f5f;
+            border-color: #ef4f5f;
+            transform: scale(1.15);
+            box-shadow: 0 0 10px rgba(239, 79, 95, 0.4);
+        }
+
+        .pin-keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            max-width: 260px;
+            margin: 0 auto;
+        }
+
+        .key-btn {
+            background: #f4f4f6;
+            border: none;
+            border-radius: 50%;
+            width: 65px;
+            height: 65px;
+            font-size: 22px;
+            font-weight: 600;
+            color: #1c1c1c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+            margin: 0 auto;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .key-btn:active {
+            background: #e2e2e6;
+            transform: scale(0.92);
+        }
+
+        .key-btn.clear-key {
+            background: transparent;
+            font-size: 14px;
+            color: #ef4f5f;
+            font-weight: 700;
+        }
+
+        .pin-error-text {
+            color: #ef4f5f;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 12px;
+            display: none;
+        }
+
+
+        /* --- MEMORY BOOK SCREEN --- */
+        #memory-screen {
+            display: none;
+            min-height: 100vh;
+            background-color: #12100e;
+            color: #f4eee2;
+            position: relative;
+            padding: 20px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .book-container {
+            width: 100%;
+            max-width: 380px;
+            background: #3c2a1d;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            padding: 20px;
+            position: relative;
+            min-height: 490px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: 2px solid #573e2b;
+        }
+
+        .book-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .book-btn {
+            background: #573e2b;
+            color: #f4eee2;
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+            z-index: 5;
+        }
+
+        .book-btn:active {
+            transform: scale(0.92);
+        }
+
+        .page-content {
+            background: #fdfbf7;
+            color: #333;
+            border-radius: 10px;
+            padding: 16px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.06);
+            cursor: pointer;
+            position: relative;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .memory-photo-box {
+            width: 100%;
+            height: 220px;
+            background: #f2ede4;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8c8275;
+            font-size: 14px;
+            margin-bottom: 14px;
+            overflow: hidden;
+            border: 1px dashed #d3c7b8;
+        }
+
+        .memory-photo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .memory-date {
+            font-size: 13px;
+            color: #8c8275;
+            margin-bottom: 4px;
+        }
+
+        .memory-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c221e;
+            margin-bottom: 12px;
+        }
+
+        .page-indicator {
+            font-size: 12px;
+            color: #8c8275;
+            margin-top: 8px;
+        }
+
+        .back-to-zomato {
+            margin-top: 15px;
+            background: transparent;
+            border: 1px solid #573e2b;
+            color: #c7b299;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .back-to-zomato:active {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .cover-page {
+            justify-content: center;
+            background: linear-gradient(135deg, #4f3624, #2b1c11);
+            color: #f4eee2;
+        }
+
+        .cover-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #eed9b7;
+            letter-spacing: 0.5px;
+        }
+
+        .cover-subtitle {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* --- STYLISH CUSTOM MODALS FOR ADD & SEARCH --- */
+        .custom-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 2500;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .custom-modal-box {
+            background: #fff;
+            padding: 24px;
+            border-radius: 20px;
+            width: 88%;
+            max-width: 330px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            animation: scaleUp 0.25s ease;
+        }
+
+        .custom-modal-box h4 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1c1c1c;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+            text-align: left;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #dedede;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            background: #fafafa;
+        }
+
+        .form-group input:focus {
+            border-color: #ef4f5f;
+            background: #fff;
+        }
+
+        .modal-btn-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+
+        .modal-btn.cancel {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .modal-btn.primary {
+            background: #ef4f5f;
+            color: white;
+        }
+
+        .search-results-list {
+            max-height: 160px;
+            overflow-y: auto;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .search-item {
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+            cursor: pointer;
+            color: #333;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .search-item:hover {
+            background: #f8f8f8;
+        }
+
+        /* --- 2-STEP CONFIRMATION DIALOG --- */
+        #custom-dialog {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dialog-box {
+            background: #fff;
+            padding: 24px;
+            border-radius: 20px;
+            width: 85%;
+            max-width: 310px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+        }
+
+        .dialog-box h4 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1c1c1c;
+            margin-bottom: 8px;
+        }
+
+        .dialog-box p {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .dialog-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .dialog-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+
+        .dialog-btn.cancel {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .dialog-btn.danger {
+            background: #ef4f5f;
+            color: white;
+        }
+
+        @keyframes scaleUp {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* --- BIGGER ZOMATO SCREEN --- */
+        #zomato-screen { font-size: 18px; }
+        .z-top-header { padding: 18px 20px; }
+        .z-location-row { font-size: 21px; gap: 6px; }
+        .z-location-row svg { width: 24px; height: 24px; }
+        .z-subloc { font-size: 15px; margin-left: 30px; }
+        .z-profile-btn { width: 52px; height: 52px; }
+        .z-search-container { padding: 14px 20px; }
+        .z-search-box { padding: 15px 18px; border-radius: 14px; gap: 12px; }
+        .z-search-box svg { width: 24px; height: 24px; }
+        .z-search-box input { font-size: 17px; }
+        .z-main-content { padding: 20px; }
+        .z-promo-banner { height: 190px; padding: 26px; border-radius: 20px; }
+        .z-promo-banner h2 { font-size: 27px; }
+        .z-promo-banner p { font-size: 16px; }
+        .z-section-header { font-size: 22px; margin-bottom: 16px; }
+        .z-card { border-radius: 20px; margin-bottom: 22px; }
+        .z-card-img { height: 215px; font-size: 16px; }
+        .z-card-body { padding: 18px; }
+        .z-card-title { font-size: 21px; }
+        .z-card-sub { font-size: 15px; }
+        .z-rating-badge { font-size: 16px; padding: 6px 11px; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <!-- FAKE ZOMATO HOME SCREEN -->
+    <div id="zomato-screen">
+        <div class="z-top-header">
+            <div class="z-loc-box">
+                <div class="z-location-row">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                    <span>Adajan</span>
+                </div>
+                <div class="z-subloc">Surat, Gujarat</div>
+            </div>
+            <!-- 3-Click Secret Trigger on Profile Icon -->
+            <div class="z-profile-btn" id="profile-trigger" title="Tap 3 times">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces" alt="Profile">
+            </div>
+        </div>
+
+        <div class="z-search-container">
+            <div class="z-search-box">
+                <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                <input type="text" placeholder="Restaurant name, cuisine, or a dish">
+            </div>
+        </div>
+
+        <div class="z-main-content">
+            <div class="z-promo-banner">
+                <h2>Zomato Gold</h2>
+                <p>Flat 50% OFF + Free Delivery on top dining & delivery</p>
+            </div>
+
+            <div class="z-section-header">In the spotlight</div>
+
+            <div class="z-card">
+                <div class="z-card-img">Restaurant Image</div>
+                <div class="z-card-body">
+                    <div>
+                        <div class="z-card-title">Behrouz Biryani</div>
+                        <div class="z-card-sub">Biryani, Mughlai, Kebabs</div>
+                    </div>
+                    <div class="z-rating-badge">4.3 ★</div>
+                </div>
+            </div>
+
+            <div class="z-card">
+                <div class="z-card-img">Restaurant Image</div>
+                <div class="z-card-body">
+                    <div>
+                        <div class="z-card-title">La Pino'z Pizza</div>
+                        <div class="z-card-sub">Pizzas, Fast Food, Pasta</div>
+                    </div>
+                    <div class="z-rating-badge">4.2 ★</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MODERN GLASSMORPHIC PIN MODAL -->
+    <div id="password-modal">
+        <div class="modern-pin-box">
+            <div class="pin-lock-icon">🔒</div>
+            <h3>Enter Passcode</h3>
+            <p>Enter 6-digit PIN to continue</p>
+            
+            <div class="pin-dots-container">
+                <div class="pin-dot" id="dot-0"></div>
+                <div class="pin-dot" id="dot-1"></div>
+                <div class="pin-dot" id="dot-2"></div>
+                <div class="pin-dot" id="dot-3"></div>
+                <div class="pin-dot" id="dot-4"></div>
+                <div class="pin-dot" id="dot-5"></div>
+            </div>
+
+            <div class="pin-keypad">
+                <button class="key-btn" onclick="pressKey('1')">1</button>
+                <button class="key-btn" onclick="pressKey('2')">2</button>
+                <button class="key-btn" onclick="pressKey('3')">3</button>
+                <button class="key-btn" onclick="pressKey('4')">4</button>
+                <button class="key-btn" onclick="pressKey('5')">5</button>
+                <button class="key-btn" onclick="pressKey('6')">6</button>
+                <button class="key-btn" onclick="pressKey('7')">7</button>
+                <button class="key-btn" onclick="pressKey('8')">8</button>
+                <button class="key-btn" onclick="pressKey('9')">9</button>
+                <button class="key-btn clear-key" onclick="clearPin()">Clear</button>
+                <button class="key-btn" onclick="pressKey('0')">0</button>
+                <button class="key-btn clear-key" onclick="backspacePin()">⌫</button>
+            </div>
+
+            <div class="pin-error-text" id="pin-error">Incorrect PIN! Try again.</div>
+        </div>
+    </div>
+
+
+    <!-- MEMORY BOOK SCREEN -->
+    <div id="memory-screen">
+        <div class="book-container">
+            <div class="book-top-bar">
+                <button class="book-btn" id="add-btn" title="Add Memory">+</button>
+                <button class="book-btn" id="zoom-btn" title="Search Memory">🔍</button>
+            </div>
+
+            <div class="page-content" id="book-content">
+                <!-- Dynamic Pages rendered here -->
+            </div>
+
+            <div style="text-align: center;">
+                <button class="back-to-zomato" id="close-book">Back to Zomato</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD MEMORY MODAL WITH CALENDAR DATE PICKER -->
+    <div id="add-modal" class="custom-modal-overlay">
+        <div class="custom-modal-box">
+            <h4>✨ Add New Memory</h4>
+            <div class="form-group">
+                <label>Memory Title</label>
+                <input type="text" id="input-title" placeholder="e.g. Best Day Ever">
+            </div>
+            <div class="form-group">
+                <label>Select Date 📆</label>
+                <input type="date" id="input-date">
+            </div>
+            <div class="modal-btn-row">
+                <button class="modal-btn cancel" id="add-cancel">Cancel</button>
+                <button class="modal-btn primary" id="add-next">Select Photo & Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEARCH MODAL WITH CALENDAR DATE PICKER -->
+    <div id="search-modal" class="custom-modal-overlay">
+        <div class="custom-modal-box">
+            <h4>🔍 Search Memories</h4>
+            <div class="form-group">
+                <label>Filter by Date 📆</label>
+                <input type="date" id="search-date-input">
+            </div>
+            <div class="form-group">
+                <label>Or search by Title</label>
+                <input type="text" id="search-text-input" placeholder="Type title keywords...">
+            </div>
+            <div class="search-results-list" id="search-results">
+                <div style="text-align:center; color:#888; font-size:13px;">No memories matched</div>
+            </div>
+            <button class="modal-btn cancel" id="search-close" style="width:100%;">Close</button>
+        </div>
+    </div>
+
+    <!-- 2-STEP CONFIRMATION DIALOG -->
+    <div id="custom-dialog">
+        <div class="dialog-box">
+            <h4 id="dialog-title">Delete Memory?</h4>
+            <p id="dialog-desc">Are you sure you want to delete this memory permanently?</p>
+            <div class="dialog-btns">
+                <button class="dialog-btn cancel" id="dialog-cancel">Cancel</button>
+                <button class="dialog-btn danger" id="dialog-confirm">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HIDDEN FILE INPUT FOR GALLERY UPLOAD -->
+    <input type="file" id="gallery-input" accept="image/*" style="display: none;">
+
+    <script>
+        const SUPABASE_URL = "https://webbnoksewiviulygfpa.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_x8yXF76REmNalWy0_VBWTg_4k7CevSi";
+        
+        let supabaseClient = null;
+        try {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+            });
+            console.log("Supabase Connected Successfully!");
+        } catch(e) {
+            console.log("Supabase initialization error", e);
+        }
+
+        // Set to true only if you really want IP/location/device logged on every unlock
+        const ENABLE_VISITOR_LOG = false;
+
+        function withTimeout(promise, ms) {
+            return Promise.race([
+                promise,
+                new Promise((_, reject) => setTimeout(() => reject(new Error("Timed out - check internet / Supabase")), ms))
+            ]);
+        }
+
+        function escapeHtml(str) {
+            return String(str == null ? '' : str)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function safeImgSrc(src) {
+            return (typeof src === 'string' && /^(data:image\/|https:\/\/)/.test(src)) ? src : '';
+        }
+
+        function localDateStr(d = new Date()) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        // Resize + compress photo before saving (keeps database small and fast)
+        function compressImage(file, maxSize = 1280, quality = 0.75) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onerror = reject;
+                reader.onload = () => {
+                    const img = new Image();
+                    img.onerror = reject;
+                    img.onload = () => {
+                        let { width, height } = img;
+                        const scale = Math.min(1, maxSize / Math.max(width, height));
+                        width = Math.round(width * scale);
+                        height = Math.round(height * scale);
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    img.src = reader.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        let clickCount = 0;
+        let clickTimer = null;
+
+        const profileTrigger = document.getElementById('profile-trigger');
+        const zomatoScreen = document.getElementById('zomato-screen');
+        const passwordModal = document.getElementById('password-modal');
+        const memoryScreen = document.getElementById('memory-screen');
+        const closeBookBtn = document.getElementById('close-book');
+
+        // --- 3-CLICK SECRET TRIGGER ---
+        profileTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            clickCount++;
+            if (clickTimer) clearTimeout(clickTimer);
+
+            if (clickCount >= 3) {
+                currentPin = "";
+                updatePinDots();
+                document.getElementById('pin-error').style.display = 'none';
+                passwordModal.style.display = 'flex';
+                clickCount = 0;
+            } else {
+                clickTimer = setTimeout(() => {
+                    clickCount = 0;
+                }, 800);
+            }
+        });
+
+        // --- MODERN PIN KEYPAD ---
+        let currentPin = "";
+        const correctPin = "163006";
+        let failedAttempts = 0;
+        let lockedUntil = 0;
+
+        function pressKey(digit) {
+            if (Date.now() < lockedUntil) return;
+            if (currentPin.length < 6) {
+                currentPin += digit;
+                updatePinDots();
+                if (currentPin.length === 6) {
+                    verifyPin();
+                }
+            }
+        }
+
+        function backspacePin() {
+            if (currentPin.length > 0) {
+                currentPin = currentPin.slice(0, -1);
+                updatePinDots();
+            }
+        }
+
+        function clearPin() {
+            currentPin = "";
+            updatePinDots();
+        }
+
+        function updatePinDots() {
+            for (let i = 0; i < 6; i++) {
+                const dot = document.getElementById(`dot-${i}`);
+                if (i < currentPin.length) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            }
+        }
+
+        async function verifyPin() {
+            if (currentPin === correctPin) {
+                failedAttempts = 0;
+                passwordModal.style.display = 'none';
+                zomatoScreen.style.display = 'none';
+                memoryScreen.style.display = 'flex';
+                if (ENABLE_VISITOR_LOG) { try { await withTimeout(logVisitor(), 4000); } catch (e) {} }
+                loadMemories();
+            } else {
+                failedAttempts++;
+                if (failedAttempts >= 5) {
+                    lockedUntil = Date.now() + 30000;
+                    failedAttempts = 0;
+                }
+                const errEl = document.getElementById('pin-error');
+                errEl.style.display = 'block';
+                setTimeout(() => {
+                    currentPin = "";
+                    updatePinDots();
+                    errEl.style.display = 'none';
+                }, 800);
+            }
+        }
+
+        closeBookBtn.addEventListener('click', () => {
+            memoryScreen.style.display = 'none';
+            zomatoScreen.style.display = 'block';
+        });
+
+        async function logVisitor() {
+            if (!supabaseClient) return;
+            try {
+                let locationStr = "Unknown";
+                let ipStr = "Unknown";
+                try {
+                    const res = await fetch('https://ipapi.co/json/');
+                    const data = await res.json();
+                    locationStr = `${data.city || 'Unknown'}, ${data.region || ''}, ${data.country_name || ''}`;
+                    ipStr = data.ip || 'Unknown';
+                } catch(err) {}
+
+                await supabaseClient.from('visitors').insert([{
+                    visited_at: new Date().toLocaleString(),
+                    device: navigator.userAgent,
+                    location: locationStr,
+                    ip: ipStr
+                }]);
+            } catch (err) {}
+        }
+
+        // --- DYNAMIC MEMORIES & GALLERY UPLOAD ---
+        let memories = [
+            { id: 'cover', type: 'cover', title: 'Our Memories', subtitle: 'tap to open' }
+        ];
+
+        let currentPage = 0;
+        const bookContent = document.getElementById('book-content');
+
+        async function loadMemories() {
+            renderPage(); // show the cover instantly, don't wait for the network
+            if (!supabaseClient) {
+                memories[0].subtitle = 'database not connected';
+                renderPage();
+                return;
+            }
+            try {
+                const { data, error } = await withTimeout(
+                    supabaseClient.from('memories').select('*').order('date', { ascending: true }).order('id', { ascending: true }),
+                    10000
+                );
+                if (error) {
+                    console.error("Load error:", error);
+                    memories[0].subtitle = 'could not load: ' + error.message;
+                } else if (data) {
+                    memories = [{ id: 'cover', type: 'cover', title: 'Our Memories', subtitle: 'tap to open' }];
+                    data.forEach((item) => {
+                        memories.push({
+                            id: item.id,
+                            type: 'page',
+                            date: item.date || 'Today',
+                            title: item.title || 'Special Memory',
+                            photoText: item.photoText || ''
+                        });
+                    });
+                }
+            } catch (e) {
+                console.error("Load exception:", e);
+                memories[0].subtitle = 'could not load: ' + e.message;
+            }
+            renderPage();
+        }
+
+        function renderPage() {
+            if (currentPage >= memories.length) currentPage = 0;
+            const mem = memories[currentPage];
+            
+            if (mem.type === 'cover') {
+                bookContent.className = 'page-content cover-page';
+                bookContent.innerHTML = `
+                    <div class="cover-title">${escapeHtml(mem.title)}</div>
+                    <div class="cover-subtitle">${escapeHtml(mem.subtitle)}</div>
+                `;
+            } else {
+                bookContent.className = 'page-content';
+                const imgSrc = safeImgSrc(mem.photoText);
+                let photoContent = imgSrc ? `<img src="${imgSrc}" alt="Memory">` : `no photo`;
+                
+                let displayDate = mem.date;
+                if (mem.date && mem.date.includes('-')) {
+                    const parts = mem.date.split('-');
+                    if (parts.length === 3) {
+                        const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+                        displayDate = dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+                    }
+                }
+
+                bookContent.innerHTML = `
+                    <div class="memory-photo-box">${photoContent}</div>
+                    <div class="memory-date">📆 ${escapeHtml(displayDate)}</div>
+                    <div class="memory-title">${escapeHtml(mem.title)}</div>
+                    <div class="page-indicator">${currentPage} / ${memories.length - 1}</div>
+                `;
+            }
+        }
+
+        let longPressFired = false;
+        bookContent.addEventListener('click', (e) => {
+            if (longPressFired) { longPressFired = false; return; }
+            if (memories.length <= 1) return;
+            currentPage++;
+            if (currentPage >= memories.length) {
+                currentPage = 0;
+            }
+            renderPage();
+        });
+
+        // --- ADD MEMORY WITH CALENDAR MODAL & BULLETPROOF ERROR CHECKING ---
+        const addBtn = document.getElementById('add-btn');
+        const addModal = document.getElementById('add-modal');
+        const addCancel = document.getElementById('add-cancel');
+        const addNext = document.getElementById('add-next');
+        const inputTitle = document.getElementById('input-title');
+        const inputDate = document.getElementById('input-date');
+
+        addBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            inputTitle.value = '';
+            inputDate.value = localDateStr();
+            addModal.style.display = 'flex';
+        });
+
+        addCancel.addEventListener('click', () => {
+            addModal.style.display = 'none';
+        });
+
+        addNext.addEventListener('click', async () => {
+            const titleVal = inputTitle.value.trim();
+            const dateVal = inputDate.value;
+
+            if (!titleVal) {
+                alert("Please enter a memory title!");
+                return;
+            }
+            if (!dateVal) {
+                alert("Please select a date!");
+                return;
+            }
+
+            addModal.style.display = 'none';
+
+            // Trigger gallery
+            const galleryInput = document.getElementById('gallery-input');
+            galleryInput.value = '';
+            galleryInput.onchange = async (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                if (!supabaseClient) {
+                    alert("Supabase client not initialized!");
+                    return;
+                }
+
+                let base64Image;
+                try {
+                    base64Image = await compressImage(file);
+                } catch (err) {
+                    alert("Could not read this photo. Try another one.");
+                    return;
+                }
+
+                const newRecord = { title: titleVal, date: dateVal, photoText: base64Image };
+
+                try {
+                    const { data, error } = await supabaseClient.from('memories').insert([newRecord]).select();
+                    if (error || !data || data.length === 0) {
+                        console.error("Supabase Insert Error:", error);
+                        alert("Save failed: " + (error ? error.message : "no data returned"));
+                        return;
+                    }
+                    memories.push({
+                        id: data[0].id,
+                        type: 'page',
+                        date: dateVal,
+                        title: titleVal,
+                        photoText: base64Image
+                    });
+                    currentPage = memories.length - 1;
+                    renderPage();
+                } catch (err) {
+                    console.error("Network/Catch Error:", err);
+                    alert("Failed to save to database. Check your internet.");
+                }
+            };
+            galleryInput.click();
+        });
+
+        // --- SEARCH WITH CALENDAR FILTER ---
+        const zoomBtn = document.getElementById('zoom-btn');
+        const searchModal = document.getElementById('search-modal');
+        const searchDateInput = document.getElementById('search-date-input');
+        const searchTextInput = document.getElementById('search-text-input');
+        const searchResults = document.getElementById('search-results');
+        const searchClose = document.getElementById('search-close');
+
+        zoomBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            searchDateInput.value = '';
+            searchTextInput.value = '';
+            updateSearchResults();
+            searchModal.style.display = 'flex';
+        });
+
+        searchDateInput.addEventListener('input', updateSearchResults);
+        searchTextInput.addEventListener('input', updateSearchResults);
+
+        function updateSearchResults() {
+            const dateQuery = searchDateInput.value;
+            const textQuery = searchTextInput.value.toLowerCase();
+
+            const filtered = memories.filter((m, idx) => {
+                if (idx === 0) return false;
+                const matchDate = dateQuery ? m.date === dateQuery : true;
+                const matchText = textQuery ? (String(m.title || '').toLowerCase().includes(textQuery) || String(m.date || '').includes(textQuery)) : true;
+                return matchDate && matchText;
+            });
+
+            if (filtered.length === 0) {
+                searchResults.innerHTML = '<div style="text-align:center; color:#888; font-size:13px; padding:15px;">No matching memories found</div>';
+                return;
+            }
+
+            searchResults.innerHTML = '';
+            filtered.forEach(item => {
+                const originalIdx = memories.indexOf(item);
+                const div = document.createElement('div');
+                div.className = 'search-item';
+                div.innerHTML = `<span><b>📆 ${escapeHtml(item.date)}</b></span><span>${escapeHtml(item.title)}</span>`;
+                div.onclick = () => {
+                    currentPage = originalIdx;
+                    renderPage();
+                    searchModal.style.display = 'none';
+                };
+                searchResults.appendChild(div);
+            });
+        }
+
+        searchClose.addEventListener('click', () => {
+            searchModal.style.display = 'none';
+        });
+
+        // --- 2-STEP CONFIRMATION DELETE ON LONG PRESS / HOLD ---
+        let pressTimer = null;
+        bookContent.addEventListener('touchstart', startHold);
+        bookContent.addEventListener('mousedown', startHold);
+        bookContent.addEventListener('touchmove', cancelHold);
+        bookContent.addEventListener('touchend', cancelHold);
+        bookContent.addEventListener('mouseup', cancelHold);
+        bookContent.addEventListener('mouseleave', cancelHold);
+
+        function startHold(e) {
+            if (memories[currentPage].type === 'cover') return;
+            longPressFired = false;
+            pressTimer = setTimeout(() => {
+                longPressFired = true;
+                showDeleteDialog(currentPage);
+            }, 800);
+        }
+
+        function cancelHold() {
+            if (pressTimer) clearTimeout(pressTimer);
+        }
+
+        function showDeleteDialog(index) {
+            const dialog = document.getElementById('custom-dialog');
+            const confirmBtn = document.getElementById('dialog-confirm');
+            const cancelBtn = document.getElementById('dialog-cancel');
+            
+            dialog.style.display = 'flex';
+
+            confirmBtn.onclick = async () => {
+                dialog.style.display = 'none';
+                showSecondConfirmDialog(index);
+            };
+
+            cancelBtn.onclick = () => {
+                dialog.style.display = 'none';
+            };
+        }
+
+        function showSecondConfirmDialog(index) {
+            const dialog = document.getElementById('custom-dialog');
+            const title = document.getElementById('dialog-title');
+            const desc = document.getElementById('dialog-desc');
+            const confirmBtn = document.getElementById('dialog-confirm');
+            const cancelBtn = document.getElementById('dialog-cancel');
+
+            title.innerText = "CONFIRM DELETE?";
+            desc.innerText = "This action cannot be undone. Permanent deletion.";
+            dialog.style.display = 'flex';
+
+            confirmBtn.onclick = async () => {
+                dialog.style.display = 'none';
+                const memToDelete = memories[index];
+
+                if (memToDelete && memToDelete.id && memToDelete.id !== 'cover') {
+                    if (!supabaseClient) {
+                        alert("Database not connected. Memory not deleted.");
+                    } else {
+                        try {
+                            const { error } = await supabaseClient.from('memories').delete().eq('id', memToDelete.id);
+                            if (error) {
+                                alert("Delete failed: " + error.message);
+                            } else {
+                                memories.splice(index, 1);
+                                currentPage = Math.max(0, index - 1);
+                                renderPage();
+                            }
+                        } catch (err) {
+                            alert("Delete failed. Check your internet.");
+                        }
+                    }
+                }
+
+                title.innerText = "Delete Memory?";
+                desc.innerText = "Are you sure you want to delete this memory permanently?";
+            };
+
+            cancelBtn.onclick = () => {
+                dialog.style.display = 'none';
+                title.innerText = "Delete Memory?";
+                desc.innerText = "Are you sure you want to delete this memory permanently?";
+            };
+        }
+    </script>
+</body>
+</html>
