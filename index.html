@@ -1189,14 +1189,20 @@
                         alert("Save failed: " + (error ? error.message : "no data returned"));
                         return;
                     }
-                    memories.push({
+                    const newMem = {
                         id: data[0].id,
                         type: 'page',
                         date: dateVal,
                         title: titleVal,
                         photoText: base64Image
-                    });
-                    currentPage = memories.length - 1;
+                    };
+                    // insert in date order (cover stays at index 0) instead of always appending
+                    let insertAt = memories.length;
+                    for (let i = 1; i < memories.length; i++) {
+                        if (new Date(memories[i].date) > new Date(dateVal)) { insertAt = i; break; }
+                    }
+                    memories.splice(insertAt, 0, newMem);
+                    currentPage = insertAt;
                     renderPage();
                 } catch (err) {
                     console.error("Network/Catch Error:", err);
